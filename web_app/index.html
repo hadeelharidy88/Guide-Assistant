@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Guide Assistant</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+    }
+    h2 {
+      margin-bottom: 10px;
+    }
+    input[type="text"] {
+      width: 400px; /* Increased width */
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      padding: 8px 12px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #3e8e41;
+    }
+    #response {
+      white-space: pre-wrap; /* Preserve line breaks */
+      word-wrap: break-word; /* Break long words */
+      margin-top: 10px;
+      padding: 10px;
+      border: 1px solid #eee;
+      background-color: #f9f9f9;
+      border-radius: 4px;
+    }
+    #loading {
+      display: none; /* Initially hidden */
+      margin-top: 10px;
+      font-style: italic;
+    }
+    #error {
+      color: red;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Ask the Assistant:</h2>
+  <input id="question" type="text" placeholder="Enter your question here" />
+  <button onclick="ask()">Submit</button>
+  <p id="loading">Loading...</p>
+  <pre id="response"></pre>
+  <p id="error"></p>
+
+  <script>
+    const CLOUD_FUNCTION_URL = 'YOUR_CLOUD_FUNCTION_URL'; // Replace with your Cloud Function URL
+
+    async function ask() {
+      const question = document.getElementById('question').value;
+
+      // Input validation
+      if (!question.trim()) {
+        document.getElementById('error').innerText = 'Please enter a question.';
+        return;
+      }
+
+      document.getElementById('error').innerText = ''; // Clear previous error
+      document.getElementById('response').innerText = ''; // Clear previous response
+      document.getElementById('loading').style.display = 'block'; // Show loading message
+
+      try {
+        const res = await fetch(CLOUD_FUNCTION_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question: question.trim() }) // Trim whitespace
+        });
+
+        if (!res.ok) {
+          throw new Error(`HTTP error! Status: ${res.status}`);
+        }
+
+        const data = await res.json();
+
+        if (data.error) {
+          document.getElementById('error').innerText = `Error: ${data.error}`;
+        } else {
+          document.getElementById('response').innerText = data.answer;
+        }
+
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        document.getElementById('error').innerText = `An error occurred: ${error.message}`;
+      } finally {
+        document.getElementById('loading').style.display = 'none'; // Hide loading message
+      }
+    }
+  </script>
+</body>
+</html>
